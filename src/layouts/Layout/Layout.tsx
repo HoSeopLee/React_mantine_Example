@@ -16,6 +16,8 @@ import Header from './Components/Header';
 import MobileMenu from './Components/MobileMenu';
 import { api } from './Api';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { changeInfiniteScrollDataToArray } from '@utils/changeInfiniteScrollDataToArray';
+import { useIntersectionObserver } from '@hooks/useIntersectionObserver';
 
 const Containers = styled('div')`
   display: flex;
@@ -56,7 +58,7 @@ const Layout = () => {
   const fetchPhotos = async (pageParams: number) => {
     console.log(pageParams);
     const { data } = await api.get(
-      `/albums?_start=${(pageParams - 1) * 10}&_limit=10`
+      `/albums?_start=${(pageParams - 1) * 10}&_limit=20`
     );
     if (data.length < 10) return { result: data, nextPage: undefined };
 
@@ -76,6 +78,25 @@ const Layout = () => {
         // Options
       }
     );
+  const list = changeInfiniteScrollDataToArray(data);
+
+  const onIntersect = React.useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, fetchNextPage, isFetchingNextPage]
+  );
+
+  const { setTarget } = useIntersectionObserver({
+    onIntersect,
+    options: {
+      rootMargin: '10%',
+      threshold: 0.25,
+    },
+  });
   return (
     <Containers>
       {/* <Header /> */}
@@ -110,23 +131,13 @@ const Layout = () => {
           Semibold asdfasdf12312312312321231231231
           asdfasdf12312312312321231231231
         </Text>
-        {/* {data?.pages.map(
-          (page) => (
-            <>{console.log(page)}</>
+        {list?.map(
+          (listItem: any) => (
+            <Text>{listItem?.title}</Text>
           )
           // <Text>{page?.title}</Text>
-        )} */}
-        {data?.pages.map((page: any, i) => {
-          return (
-            <React.Fragment key={i}>
-              {page?.data?.map((photo: any) => (
-                <Text>
-                  {console.log(photo)} {page?.title}
-                </Text>
-              ))}
-            </React.Fragment>
-          );
-        })}
+        )}
+
         <Text>asdfasdf123123123123213</Text>
         <Text>asdfasdf123123123123213</Text>
         <Text>asdfasdf123123123123213</Text>
@@ -141,6 +152,7 @@ const Layout = () => {
         <Text>asdfasdf123123123123213</Text>
         <Text>asdfasdf123123123123213</Text>
       </View>
+      {hasNextPage && <div ref={(elem) => setTarget(elem)}>로딩중...</div>}
     </Containers>
   );
 };

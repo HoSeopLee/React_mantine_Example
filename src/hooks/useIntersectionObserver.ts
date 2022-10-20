@@ -3,7 +3,6 @@ import React from 'react';
 interface UseIntersectionObserverProps extends IntersectionObserverInit {
   onIntersect: IntersectionObserverCallback;
   options?: {
-    root?: Document;
     rootMargin?: string;
     threshold?: number;
   };
@@ -11,9 +10,9 @@ interface UseIntersectionObserverProps extends IntersectionObserverInit {
 
 const useIntersectionObserver = ({
   onIntersect,
-  options = { root: undefined, rootMargin: '0px', threshold: 0 },
+  options = { rootMargin: '0px', threshold: 0 },
 }: UseIntersectionObserverProps) => {
-  const [target, setTarget] = React.useState(null);
+  const [target, setTarget] = React.useState<any>();
   React.useEffect(() => {
     if (!target) return;
     console.log(target);
