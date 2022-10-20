@@ -14,6 +14,8 @@ import NavbarCompoents from './Components/NavbarCompoents';
 import styled from '@emotion/styled';
 import Header from './Components/Header';
 import MobileMenu from './Components/MobileMenu';
+import { api } from './Api';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 const Containers = styled('div')`
   display: flex;
@@ -51,7 +53,29 @@ const Layout = () => {
       return !data;
     });
   }, []);
+  const fetchPhotos = async (pageParams: number) => {
+    console.log(pageParams);
+    const { data } = await api.get(
+      `/albums?_start=${(pageParams - 1) * 10}&_limit=10`
+    );
+    if (data.length < 10) return { result: data, nextPage: undefined };
 
+    return {
+      result: data,
+      nextPage: pageParams + 1,
+    };
+  };
+
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteQuery(
+      ['photos'],
+      async ({ pageParam = 1 }) => {
+        return await fetchPhotos(pageParam);
+      },
+      {
+        // Options
+      }
+    );
   return (
     <Containers>
       {/* <Header /> */}
@@ -71,7 +95,14 @@ const Layout = () => {
         />
         {open && <MobileMenu open={open} />}
 
-        <Text className={classes.textStyle} weight={500}>
+        <Text
+          onClick={() => {
+            console.log('1231');
+            fetchNextPage();
+          }}
+          className={classes.textStyle}
+          weight={500}
+        >
           Semibold asdfasdf12312312312321231231231 Semibold1231231231231123123
           asdfasdf12312312312321231231231 Semibold
           asdfasdf12312312312321231231231 Semibold Semibold Semibold
@@ -79,7 +110,23 @@ const Layout = () => {
           Semibold asdfasdf12312312312321231231231
           asdfasdf12312312312321231231231
         </Text>
-        <Text>asdfasdf123123123123213</Text>
+        {/* {data?.pages.map(
+          (page) => (
+            <>{console.log(page)}</>
+          )
+          // <Text>{page?.title}</Text>
+        )} */}
+        {data?.pages.map((page: any, i) => {
+          return (
+            <React.Fragment key={i}>
+              {page?.data?.map((photo: any) => (
+                <Text>
+                  {console.log(photo)} {page?.title}
+                </Text>
+              ))}
+            </React.Fragment>
+          );
+        })}
         <Text>asdfasdf123123123123213</Text>
         <Text>asdfasdf123123123123213</Text>
         <Text>asdfasdf123123123123213</Text>
